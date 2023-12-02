@@ -1,0 +1,3 @@
+[submodule "Colorizing-with-GANs"]
+	path = Colorizing-with-GANs
+	url = https://github.com/mingxiaowei/Colorizing-with-GANs
