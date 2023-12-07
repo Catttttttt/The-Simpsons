@@ -55,11 +55,11 @@ python test.py \
   --test-input ./dataset/simpsons_test_256 \
   --test-output ./output/test 
 ```
-
+<!-- 
 2) *TODO: Instructions for Diffusion replication*
-Work on finetuning this model is ongoing and further instructions and results will be added soon.
+Work on finetuning this model is ongoing and further instructions and results will be added soon. -->
 
-## 3) Discriminative Model:
+## 2) Discriminative Model:
 *Baseline model: Colorful Image Colorization; Richard Zhang, Phillip Isola, Alexei A. Efros. In ECCV, 2016.*
 
 Image colorization results using only the pretrained model are located in ./3_discriminative/colorful_baseline_results
