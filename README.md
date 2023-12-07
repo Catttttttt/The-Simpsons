@@ -13,8 +13,48 @@ __2) Diffusion__ - based on the Colorized-diffusion repository
 __3) Discriminative__
 *Baseline model: Colorful Image Colorization; Richard Zhang, Phillip Isola, Alexei A. Efros. In ECCV, 2016.*
 
-1) *TODO: Instructions for DCGAN*
-Work on finetuning this model is ongoing and further instructions and results will be added soon.
+## 1) Generative Model:
+*Baseline model: Image Colorization using Generative Adversarial Networks; Kamyar Nazeri, Eric Ng, and Mehran Ebrahimi. In Perales, F., Kittler, J. (eds) Articulated Motion and Deformable Objects. AMDO 2018.*
+
+To replicate the results, please run the following command first:
+```
+cd Colorizing-with-GANs
+mkdir checkpoints
+```
+Download all the datasets [here](https://drive.google.com/drive/folders/1N6WZpio230vRFiOqj0zWXf-tzfenbhpd?usp=sharing) and place them in the `Colorizing-with-GANs` folder.
+
+To fine-tune the model pretrained on the Places365 dataset, please download the pretrained weights of the Places365 model [here](https://drive.google.com/drive/folders/1vzbx5qXJEJP5KkMkyF_5iXl6fQvud7gO?usp=sharing), place them in the `checkpoints` folder, and run the following commands:
+```
+python finetune.py \
+    --checkpoints-path ./checkpoints/simpsons_new \
+    --dataset-path ./dataset/simpsons_train_256 \
+    --dataset simpsons \
+    --batch-size 40 \
+    --epochs 100 \
+    --lr 5e-4 \
+    --save-interval 80 \
+    --lr-decay-rate 0.5 \
+    --lr-decay-steps 50 \
+    --validate 1 \
+    --validate-interval 1 \
+    --log 1 \
+    --sample-interval 10 
+```
+To produce outputs, please either fine-tune the model first or download our pretrained weights [here](https://drive.google.com/drive/folders/11Qq_I6wQbfd_NxAtB18XzGbnu0sAerYK?usp=sharing) and place them in the `checkpoints` folder. Then, run the following commands: 
+- If you fine-tuned the model: 
+```
+python test.py \
+  --checkpoints-path ./checkpoints/simpsons_new \
+  --test-input ./dataset/simpsons_test_256 \
+  --test-output ./output/test 
+```
+- If you use our pretrained weights: 
+```
+python test.py \
+  --checkpoints-path ./checkpoints/simpsons11 \
+  --test-input ./dataset/simpsons_test_256 \
+  --test-output ./output/test 
+```
 
 2) *TODO: Instructions for Diffusion replication*
 Work on finetuning this model is ongoing and further instructions and results will be added soon.
