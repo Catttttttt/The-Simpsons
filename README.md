@@ -9,7 +9,7 @@ We aim to address the limitations of existing models that are primarily trained 
 
 This repository contains the following folders corresponding to the results with different types of models:
 __1) DCGAN__ - based on code from ...
-__2) Diffusion__ - based on the Colorized-diffusion repository
+__2) Diffusion__ - Finetuning InstructPix2Pix
 __3) Discriminative__
 *Baseline model: Colorful Image Colorization; Richard Zhang, Phillip Isola, Alexei A. Efros. In ECCV, 2016.*
 
@@ -59,7 +59,89 @@ python test.py \
 2) *TODO: Instructions for Diffusion replication*
 Work on finetuning this model is ongoing and further instructions and results will be added soon. -->
 
-## 2) Discriminative Model:
+## 2) Diffusion Model: Finetuning InstructPix2Pix
+_[Performing the fine-tuning requires a cuda GPU due to the StableDiffusion requirements]_
+
+The pre-trained weights and training/validation/test dataset are provided at the following links:
+1) Pre-trained weights: https://huggingface.co/wid4soe/ip2p-simpsons
+2) Dataset: https://huggingface.co/datasets/wid4soe/182_simpsons_train
+
+Below are the instructions to finetune and run the model. 
+We have also included a sample notebook called finetune_and_run.ipynb in the repo under the folder 4_instructpix2pix.
+
+Clone the repo and change into the correct directory:
+```
+git clone https://github.com/Catttttttt/The-Simpsons.git
+cd ./The-Simpsons/4_instructpix2pix/finetuning
+```
+Install the required requirements:
+```
+pip install -r requirements.txt
+```
+Log into Hugging Face using a WRITE access token from your Hugging Face account:
+```
+huggingface-cli login [HUGGINGFACE_TOKEN]
+```
+To perform the finetuning, run the following code, substituting the OUTPUT_DIR with the desired output directory for your model. If the environment variable does not work, you can paste the string in the corresponding argument.
+```
+export OUTPUT_DIR="<output_dir>"
+
+accelerate launch --mixed_precision="fp16" ft_instruct_pix2pix.py \
+  --pretrained_model_name_or_path="timbrooks/instruct-pix2pix" \
+  --dataset_name="wid4soe/182_simpsons_train" \
+  --use_ema \
+  --resolution=256 --random_flip \
+  --train_batch_size=2 --gradient_accumulation_steps=4 --gradient_checkpointing \
+  --max_train_steps=1000 \
+  --checkpointing_steps=300 --checkpoints_total_limit=1 \
+  --learning_rate=5e-05 --lr_warmup_steps=0 \
+  --mixed_precision=fp16 \
+  --val_image_url="https://datasets-server.huggingface.co/assets/wid4soe/182_3/--/f33bb01840d693bfdb02485894413633d62531a1/--/default/train/0/original_image/image.jpg" \
+  --validation_prompt="Color in the style of the Simpsons. a man in a suit and tie, with a woman in a suit and tie" \
+  --seed=42 \
+  --output_dir=$OUTPUT_DIR \
+  --report_to=tensorboard \
+  --push_to_hub
+```
+Our finetuned model is hosted on HuggingFace at the following link: https://huggingface.co/wid4soe/ip2p-simpsons
+
+To run the finetuned model on your own images (requires CUDA due to the StableDiffusion pipeline requirements):
+Install the required dependencies:
+```pip install diffusers accelerate safetensors transformers```
+Login to HuggingFace with an access token:
+```huggingface-cli login [HUGGINGFACE_TOKEN]```
+
+Initialize the pipeline. You may also replace model_id with the address of your local model.
+```
+import pandas as pd
+from PIL import Image, ImageEnhance
+from io import BytesIO
+from IPython.display import display
+import random
+import PIL
+import requests
+import torch
+from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
+
+model_id = "wid4soe/ip2p-simpsons"
+pipe_simp = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
+pipe_simp.to("cuda")
+pipe_simp.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe_simp.scheduler.config)
+```
+Generate images using the finetuned model. Replace `{INPUT_IMAGE}` and `{OUTPUT_PATH}` with where you would like to load your image from and save the colorized image to.
+```
+from PIL import ImageOps
+img=Image.open('{INPUT_IMAGE}')
+text = "Color in the style of the Simpsons: {YOUR DESCRIPTION}"
+prompt = "Color in the style of the Simpsons: " + "Your instruction"
+img = ImageOps.grayscale(img)
+img = img.convert('RGB')
+images = pipe_simp(prompt, image=img, num_inference_steps=10, image_guidance_scale=1).images
+img.save("/content/182_final_proj/test_ip2p/mono/img_mono.jpg")    # save the grayscale input image
+images[0].save("{OUTPUT_PATH}/img_color.jpg")                         # save the colorized output image
+```
+
+## 3) Discriminative Model:
 *Baseline model: Colorful Image Colorization; Richard Zhang, Phillip Isola, Alexei A. Efros. In ECCV, 2016.*
 
 Image colorization results using only the pretrained model are located in ./3_discriminative/colorful_baseline_results
